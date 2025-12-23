@@ -1,47 +1,129 @@
-# Claude Code Plugins Directory
+# Claude Code Plugins - Minimal Harness Marketplace
 
-A curated directory of high-quality plugins for Claude Code.
+A minimal Claude Code marketplace containing one reference plugin (`wk-minimal-harness`) that demonstrates:
 
-> **⚠️ Important:** Make sure you trust a plugin before installing, updating, or using it. Anthropic does not control what MCP servers, files, or other software are included in plugins and cannot verify that they will work as intended or that they won't change. See each plugin's homepage for more information.
+- **Hooks** (SessionStart, PostToolUse)
+- **MCP (stdio)** server integration
+- **LSP** (Python and TypeScript) integration
+- **Commands**, **Agents**, and **Skills**
 
 ## Structure
 
-- **`/plugins`** - Internal plugins developed and maintained by Anthropic
-- **`/external_plugins`** - Third-party plugins from partners and the community
+```
+.claude-plugin/
+└── marketplace.json          # Marketplace definition
+
+plugins/wk-minimal-harness/
+├── .claude-plugin/
+│   └── plugin.json           # Plugin manifest
+├── CLAUDE.md                 # Plugin-level instructions for Claude
+├── commands/
+│   ├── doctor.md             # Sanity check command
+│   └── review.md             # Code review command
+├── agents/
+│   └── code-reviewer.md      # Code review agent
+├── skills/
+│   └── repo-conventions/
+│       └── SKILL.md          # Repo conventions skill
+├── hooks/
+│   └── hooks.json            # Hooks configuration
+├── example_scripts/          # Example hook/MCP/LSP scripts
+│   ├── example_sessionstart_env.sh
+│   ├── example_format_after_write.sh
+│   ├── example_mcp_venv_setup.sh
+│   ├── example_run_mcp_server.sh
+│   └── example_lsp_bootstrap.sh
+├── example_python/
+│   └── requirements.txt      # MCP server dependencies
+├── example_mcp_servers/
+│   └── example_mcp_server.py # Example MCP server (stdio)
+├── .mcp.json                 # MCP server configuration
+└── .lsp.json                 # LSP server configuration
+```
 
 ## Installation
 
-Plugins can be installed directly from this marketplace via Claude Code's plugin system.
+Add this marketplace to your project's `.claude/settings.json`:
 
-To install, run `/plugin install {plugin-name}@claude-plugin-directory`
-
-or browse for the plugin in `/plugin > Discover`
-
-## Contributing
-
-### Internal Plugins
-
-Internal plugins are developed by Anthropic team members. See `/plugins/example-plugin` for a reference implementation.
-
-### External Plugins
-
-Third-party partners can submit plugins for inclusion in the marketplace. External plugins must meet quality and security standards for approval.
-
-## Plugin Structure
-
-Each plugin follows a standard structure:
-
-```
-plugin-name/
-├── .claude-plugin/
-│   └── plugin.json      # Plugin metadata (required)
-├── .mcp.json            # MCP server configuration (optional)
-├── commands/            # Slash commands (optional)
-├── agents/              # Agent definitions (optional)
-├── skills/              # Skill definitions (optional)
-└── README.md            # Documentation
+```json
+{
+  "extraKnownMarketplaces": {
+    "wkumaga1-claude-harness": {
+      "source": { "source": "github", "repo": "wkumaga1/claude-harness" }
+    }
+  },
+  "enabledPlugins": [
+    "wk-minimal-harness@wkumaga1-claude-harness"
+  ],
+  "env": {
+    "MCP_TIMEOUT": "120000",
+    "MCP_TOOL_TIMEOUT": "600000"
+  }
+}
 ```
 
-## Documentation
+## Claude Code on the Web (Cloud) Notes
 
-For more information on developing Claude Code plugins, see the [official documentation](https://code.claude.com/docs/en/plugins).
+When using Claude Code in cloud environments, network restrictions may apply.
+
+### Required Domain Allowlist
+
+If your cloud environment restricts network access, allow these domains:
+
+- `pypi.org` - Python package index
+- `files.pythonhosted.org` - Python package downloads
+- `registry.npmjs.org` - npm package registry
+
+### Behavior in Restricted Environments
+
+When `CLAUDE_CODE_REMOTE=true` and network is restricted:
+
+- MCP venv setup will skip (safe early exit)
+- LSP bootstrap will skip (safe early exit)
+- The plugin will still function for commands/agents/skills
+
+## Verification
+
+After installation, run the `doctor` command to verify the setup:
+
+1. Check expected files exist
+2. Validate all JSON files:
+   ```bash
+   python3 -m json.tool .claude-plugin/marketplace.json
+   python3 -m json.tool plugins/wk-minimal-harness/.claude-plugin/plugin.json
+   python3 -m json.tool plugins/wk-minimal-harness/hooks/hooks.json
+   python3 -m json.tool plugins/wk-minimal-harness/.mcp.json
+   python3 -m json.tool plugins/wk-minimal-harness/.lsp.json
+   ```
+
+### MCP Verification (Local)
+
+After SessionStart runs:
+1. The MCP venv should be created at `.claude/runtime/mcp/wk-example-stdio/venv/`
+2. MCP tools (`add`, `echo`) should be available
+
+### LSP Verification (Local)
+
+After SessionStart runs:
+1. `pylsp` should be on PATH (from `.claude/runtime/lsp/py-venv/bin/`)
+2. Python files should have symbol navigation support
+
+## Environment Variables
+
+- `CLAUDE_CODE_REMOTE` - Set to `true` in cloud environments
+- `CLAUDE_PLUGIN_ROOT` - Path to the plugin directory (set by Claude Code)
+- `CLAUDE_PROJECT_DIR` - Path to the project directory (set by Claude Code)
+- `CLAUDE_ENV_FILE` - Path to the env file for SessionStart hooks (set by Claude Code)
+
+## Secrets
+
+Do not commit `.env` files. Use `.env.example` as a template:
+
+```bash
+cp .env.example .env
+# Edit .env with your secrets
+```
+
+## License
+
+MIT

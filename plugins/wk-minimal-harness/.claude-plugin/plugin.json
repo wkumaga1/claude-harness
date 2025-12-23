@@ -1,0 +1,5 @@
+{
+  "name": "wk-minimal-harness",
+  "version": "0.1.0",
+  "description": "Minimal harness plugin: hooks + MCP(stdio) + LSP + starter commands/agents/skills."
+}
