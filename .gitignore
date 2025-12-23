@@ -1,2 +1,5 @@
-*.DS_Store
-.claude/
+.env
+.claude/settings.local.json
+.claude/runtime/
+**/__pycache__/
+*.pyc

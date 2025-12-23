@@ -1,0 +1,38 @@
+{
+  "description": "Hooks: load .env into CLAUDE_ENV_FILE on SessionStart; bootstrap LSP and MCP env; format JSON after Write/Edit.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/example_scripts/example_sessionstart_env.sh",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/example_scripts/example_lsp_bootstrap.sh",
+            "timeout": 300
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/example_scripts/example_mcp_venv_setup.sh",
+            "timeout": 180
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/example_scripts/example_format_after_write.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
